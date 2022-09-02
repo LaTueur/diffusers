@@ -121,7 +121,8 @@ class StableDiffusionInpaintPipeline(DiffusionPipeline):
 
         # add noise to latents using the timesteps
         noise = torch.randn(init_latents.shape, generator=generator, device=self.device)
-        init_latents = self.scheduler.add_noise(init_latents, noise, timesteps)
+        init_latents_proper = self.scheduler.add_noise(init_latents_orig, noise, timesteps)
+        init_latents = (init_latents_proper * mask) + (init_latents * (1 - mask))
 
         # get prompt text embeddings
         text_input = self.tokenizer(
