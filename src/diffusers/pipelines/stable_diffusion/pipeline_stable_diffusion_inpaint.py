@@ -119,7 +119,18 @@ class StableDiffusionInpaintPipeline(DiffusionPipeline):
         # add noise to latents using the timesteps
         noise = torch.randn(init_latents.shape, generator=generator, device=self.device)
         init_latents_proper = self.scheduler.add_noise(init_latents_orig, noise, timesteps)
-        init_latents = (init_latents_proper * mask) + (init_latents * (1 - mask))
+        latents = (init_latents_proper * mask) + (init_latents * (1 - mask))
+
+        latents = 1 / 0.18215 * latents
+        image = self.vae.decode(latents)
+
+        image = (image / 2 + 0.5).clamp(0, 1)
+        image = image.cpu().permute(0, 2, 3, 1).numpy()
+
+        if output_type == "pil":
+            image = self.numpy_to_pil(image)
+
+        return {"sample": image}
 
         # get prompt text embeddings
         text_input = self.tokenizer(
